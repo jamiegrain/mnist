@@ -1,32 +1,29 @@
 import tensorflow as tf 
 import numpy as np 
-import pandas as pd 
 
-df = pd.read_csv('train.csv')
+mnist = tf.keras.datasets.mnist
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-labels = df['label']
-df.drop(['label'], axis = 1, inplace = True)
+x_train = tf.keras.utils.normalize(x_train, axis=1)
+x_test = tf.keras.utils.normalize(x_test, axis=1)
 
-X = np.array(df)
-y = np.array(labels)
-
-X = tf.keras.utils.normalize(X, axis=1)
+x_train = np.reshape(x_train, (60000, 28, 28, 1))
+x_test = np.reshape(x_test, (10000, 28, 28, 1))
 
 model = tf.keras.Sequential()
-model.add(tf.keras.layers.Conv2D(256, (3,3), activation = tf.nn.relu, input_shape=(28, 28, 3)))
-model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2)))
-
-model.add(tf.keras.layers.Conv2D(256, (3,3), activation = tf.nn.relu))
+model.add(tf.keras.layers.Conv2D(100, (3,3), activation = tf.nn.relu, input_shape=(28, 28, 1)))
 model.add(tf.keras.layers.MaxPooling2D(pool_size=(2,2)))
 
 model.add(tf.keras.layers.Flatten())
 
-model.add(tf.keras.layers.Dense(64, activation = tf.nn.relu))
+model.add(tf.keras.layers.Dense(16, activation = tf.nn.relu))
 
-model.add(tf.keras.layers.Dense(1, activation = tf.nn.sigmoid))
+model.add(tf.keras.layers.Dense(10, activation = tf.nn.softmax))
 
-model.compile(loss='binary_crossentropy',
+model.compile(loss='sparse_categorical_crossentropy',
 	optimizer='adam',
 	metrics=['accuracy'])
 
-model.fit(X, y, epochs = 5, validation_split = 0.2)
+model.fit(x_train, y_train, epochs = 2, validation_data = (x_test, y_test))
+
+model.save('mnist_cnn_model.h5')
